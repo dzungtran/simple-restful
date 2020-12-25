@@ -1,0 +1,34 @@
+version: "3.0"
+
+services:
+  webapp:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: always
+    networks:
+      - backend
+    depends_on:
+      - mysql
+    ports:
+      - 8080:8080
+
+  mysql:
+    image: mysql:5.7
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - backend
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: simple
+      MYSQL_USER: demo
+      MYSQL_PASSWORD: demo
+    ports:
+      - 3306:3306
+
+networks:
+  backend:
+    driver: bridge
