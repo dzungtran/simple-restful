@@ -1,0 +1,12 @@
+[cinema]
+row = 10
+col = 10
+
+[general]
+session_ttl = 10 # minutes
+distance = 5
+max_seat_per_request = 5
+
+[redis]
+connection = "redis:6379"
+db = 0

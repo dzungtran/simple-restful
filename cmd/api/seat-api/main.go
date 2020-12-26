@@ -3,20 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/spf13/viper"
 	"log"
 	"net/http"
-	"simple-restful/cmd/apis/user-api/handlers"
+	"os"
+	"simple-restful/cmd/api/seat-api/handlers"
 	"simple-restful/pkg/core/servehttp"
 	"time"
 )
-
-const LocalPort = 8080
-
-var db *gorm.DB
-var err error
 
 // to init db connection or api configs
 func initConfig() {
@@ -30,21 +24,10 @@ func initConfig() {
 	if err != nil { // Handle errors reading the config file
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
-
-	mysqlConnStr := viper.GetString("mysql_conn")
-	log.Print("Mysql Connection: ", mysqlConnStr)
-
-	db, err = gorm.Open("mysql", mysqlConnStr)
-	if err != nil {
-		log.Fatalf("Cannot connect to db, details: %v", err.Error())
-	}
 }
 
 func main() {
-	initConfig()
-	if db != nil {
-		defer db.Close()
-	}
+	//initConfig()
 
 	// Init App server
 	appServer := &servehttp.AppServer{}
@@ -53,16 +36,16 @@ func main() {
 		appServer.RegisterHandler(handler.Method, handler.Route, handler.Handler)
 	}
 
-	localPort := viper.GetInt("http_port")
+	localPort := os.Getenv("APP_PORT")
 	srv := &http.Server{
 		Handler:      appServer.GetRouter(),
-		Addr:         fmt.Sprintf(":%d", localPort),
+		Addr:         fmt.Sprintf(":%v", localPort),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
 
 	go func() {
-		log.Println(fmt.Sprintf("Starting server with port :%d", localPort))
+		log.Println(fmt.Sprintf("Starting API server with port :%v", localPort))
 		if err := srv.ListenAndServe(); err != nil {
 			log.Fatal(err)
 		}
@@ -79,26 +62,5 @@ func getListHandler() []servehttp.AppHandler {
 			Method:  http.MethodGet,
 			Handler: &handlers.GetHelloHandler{},
 		},
-
-		// Get user transactions
-		{
-			Route:  "/api/users/{user_id:[0-9]+}/transactions",
-			Method: http.MethodGet,
-			Handler: &handlers.GetUserTransactionsHandler{
-				DB: db,
-			},
-		},
-
-		// Create user transaction
-		{
-			Route:  "/api/users/{user_id:[0-9]+}/transactions",
-			Method: http.MethodPost,
-			Handler: &handlers.CreateTransactionHandler{
-				DB: db,
-			},
-		},
-
-		// SHOULD BE avoid method `PUT` for update transaction and method `DELETE` for delete transaction.
-		// Because they will change user balance without a reason and you can't see them on transaction timeline.
 	}
 }

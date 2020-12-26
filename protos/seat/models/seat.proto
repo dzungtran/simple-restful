@@ -1,0 +1,9 @@
+syntax = "proto3";
+package protos.seat.models;
+option go_package = "simple-restful/exmsgs/seat/models;seat_models";
+
+message Seat {
+    int64 row = 1;
+    int64 col = 2;
+    string status = 3;
+}

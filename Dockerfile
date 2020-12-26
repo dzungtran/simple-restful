@@ -1,7 +1,10 @@
 # Load golang image to build
 FROM golang:1.14 as builder
+ARG APP_NAME
+ARG APP_PATH
+
 ENV APP_USER app
-ENV APP_HOME /go/src/simple-restful
+ENV APP_HOME /go/src/app-builder
 
 RUN groupadd $APP_USER && useradd -m -g $APP_USER -l $APP_USER
 RUN mkdir -p $APP_HOME && chown -R $APP_USER:$APP_USER $APP_HOME
@@ -10,21 +13,30 @@ WORKDIR $APP_HOME
 USER $APP_USER
 COPY ./ .
 
-RUN go build -o app ./cmd/apis/user-api
+RUN go build -o $APP_NAME ./cmd/$APP_PATH
 
 
 # Deploy execute file to simple linux server
 FROM debian:buster
+ARG APP_NAME
+ARG APP_PORT
+
 ENV APP_USER app
-ENV APP_HOME /go/src/simple-restful
+ENV BUILDER_APP_HOME /go/src/app-builder
+ENV APP_PORT $APP_PORT
 
 RUN groupadd $APP_USER && useradd -m -g $APP_USER -l $APP_USER
-RUN mkdir -p $APP_HOME
-WORKDIR $APP_HOME
+RUN mkdir -p /app
+WORKDIR /app
 
+# Copy config files
 COPY conf/ conf/
-COPY --chown=0:0 --from=builder $APP_HOME/app $APP_HOME
+#RUN echo "Copy app from Build PATH: $BUILDER_APP_HOME/$APP_NAME"
+COPY --chown=0:0 --from=builder $BUILDER_APP_HOME/$APP_NAME ./runner
 
-EXPOSE 8080
+RUN ls -l
+RUN echo "APP_NAME: $APP_NAME"
+
+EXPOSE $APP_PORT
 USER $APP_USER
-CMD ["./app", "-cf=./conf/app.yaml"]
+CMD ./runner

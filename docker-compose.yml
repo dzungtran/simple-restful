@@ -5,29 +5,32 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
+      args:
+        - APP_PORT=8080
+        - APP_NAME=seat-api
+        - APP_PATH=api/seat-api
     restart: always
     networks:
       - backend
-    depends_on:
-      - mysql
     ports:
       - 8080:8080
 
-  mysql:
-    image: mysql:5.7
-    volumes:
-      - ./db:/docker-entrypoint-initdb.d
+  seat-svc:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        - APP_PORT=33033
+        - APP_NAME=seat-svc
+        - APP_PATH=grpc/seat-svc
     restart: always
-    command: --default-authentication-plugin=mysql_native_password
     networks:
       - backend
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: simple
-      MYSQL_USER: demo
-      MYSQL_PASSWORD: demo
+
+  redis:
+    image: redis:latest
     ports:
-      - 3306:3306
+      - 6379:6379
 
 networks:
   backend:

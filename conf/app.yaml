@@ -1,6 +1,0 @@
-# App descriptor
-app_name: simple_restful
-http_port: 8080
-
-# DB configs
-mysql_conn: "root:root@(mysql)/simple?charset=utf8&parseTime=True&loc=Local"
