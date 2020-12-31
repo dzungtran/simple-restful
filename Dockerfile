@@ -20,10 +20,12 @@ RUN go build -o $APP_NAME ./cmd/$APP_PATH
 FROM debian:buster
 ARG APP_NAME
 ARG APP_PORT
+ARG CONFIG_PATH
 
 ENV APP_USER app
 ENV BUILDER_APP_HOME /go/src/app-builder
 ENV APP_PORT $APP_PORT
+ENV CONFIG_PATH $CONFIG_PATH
 
 RUN groupadd $APP_USER && useradd -m -g $APP_USER -l $APP_USER
 RUN mkdir -p /app

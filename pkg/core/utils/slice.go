@@ -17,3 +17,15 @@ func IsInt64SliceContains(intSlice []int64, num int64) bool {
 	}
 	return false
 }
+
+func Int64SliceUnique(intSlice []int64) []int64 {
+	keys := make(map[int64]bool)
+	list := []int64{}
+	for _, entry := range intSlice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
+}

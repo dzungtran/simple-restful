@@ -1,29 +1,25 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"github.com/spf13/viper"
+	"google.golang.org/grpc"
 	"log"
 	"net/http"
 	"os"
 	"simple-restful/cmd/api/seat-api/handlers"
+	seat_svc "simple-restful/exmsgs/seat/services"
 	"simple-restful/pkg/core/servehttp"
 	"time"
 )
 
-// to init db connection or api configs
-func initConfig() {
-	configFilePath := flag.String("cf", "./conf/app.yaml", "Path to config file")
-	log.Print("FILE: ", *configFilePath)
-
-	viper.SetConfigName("app")
-	viper.SetConfigType("yaml")
-	viper.SetConfigFile(*configFilePath)
-	err := viper.ReadInConfig()
-	if err != nil { // Handle errors reading the config file
-		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+func CreateSeatServiceClient() seat_svc.SeatServiceClient {
+	var conn *grpc.ClientConn
+	conn, err := grpc.Dial(fmt.Sprintf("seat-svc:33033"), grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("did not connect: %s", err)
 	}
+
+	return seat_svc.NewSeatServiceClient(conn)
 }
 
 func main() {
@@ -61,6 +57,13 @@ func getListHandler() []servehttp.AppHandler {
 			Route:   "/",
 			Method:  http.MethodGet,
 			Handler: &handlers.GetHelloHandler{},
+		},
+		{
+			Route:   "/seats/available",
+			Method:  http.MethodGet,
+			Handler: &handlers.GetAvailableSeatsHandler{
+				SeatServiceClient: CreateSeatServiceClient(),
+			},
 		},
 	}
 }

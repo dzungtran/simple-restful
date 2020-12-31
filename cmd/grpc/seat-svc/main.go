@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
@@ -9,6 +8,7 @@ import (
 	"log"
 	"net"
 	"os"
+	bookingRedis "simple-restful/cmd/grpc/seat-svc/booking/redis"
 	seat_svc "simple-restful/exmsgs/seat/services"
 	"simple-restful/pkg/dtos"
 )
@@ -18,17 +18,18 @@ var settings *dtos.CinemaSettings
 
 // to init db connection or api configs
 func initConfig() {
-	configFilePath := flag.String("cf", "./conf/cinema.yaml", "Path to config file")
-	log.Print("FILE: ", *configFilePath)
+	configFilePath := os.Getenv("CONFIG_PATH")
+	log.Print("FILE: ", configFilePath)
 
-	viper.SetConfigName("app")
-	viper.SetConfigType("yaml")
-	viper.SetConfigFile(*configFilePath)
+	//viper.SetConfigName("app")
+	viper.SetConfigType("toml")
+	viper.SetConfigFile(configFilePath)
 	err := viper.ReadInConfig()
 	if err != nil { // Handle errors reading the config file
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
 
+	log.Print("Connecting redis: ", viper.GetString("redis.connection"))
 	rdb = redis.NewClient(&redis.Options{
 		Addr: viper.GetString("redis.connection"),
 		DB:   viper.GetInt("redis.db"), // use default DB
@@ -54,7 +55,9 @@ func main() {
 	s := server{
 		CinemaSettings: settings,
 		RedisClient:    rdb,
+		BookingRepo:    bookingRedis.NewBookingRedis(rdb),
 	}
+
 	// create a gRPC server object
 	grpcServer := grpc.NewServer()
 	// attach the Ping service to the server

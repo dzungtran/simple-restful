@@ -5,7 +5,7 @@ option go_package = "simple-restful/exmsgs/seat/services;seat_svc";
 import "protos/seat/models/seat.proto";
 
 service SeatService {
-    rpc GetAvailableSeats (EmptyRequest) returns (SeatsResult);
+    rpc GetAvailableSeats (GetAvailableSeatsRequest) returns (SeatsResult);
     rpc BookSeats (SeatsRequest) returns (SeatAvailabilityResult);
     rpc Reset (EmptyRequest) returns (ResultResponse);
 }
@@ -19,8 +19,18 @@ message SeatsRequest {
     bool confirm = 4;
 }
 
+message GetAvailableSeatsRequest {
+    string current_session = 1;
+}
+
+message SetOfSeats {
+    int64 row = 1;
+    repeated int64 cols = 2;
+}
+
 message SeatsResult {
-    repeated protos.seat.models.Seat available = 1;
+    repeated SetOfSeats list = 1;
+    int64 totalAvailable = 2;
 }
 
 message SeatAvailabilityResult {

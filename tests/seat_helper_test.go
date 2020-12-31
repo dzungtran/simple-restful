@@ -1,8 +1,9 @@
-package utils
+package tests
 
 import (
 	"github.com/stretchr/testify/assert"
 	"reflect"
+	"simple-restful/cmd/grpc/seat-svc/pkg/utils"
 	seat_models "simple-restful/exmsgs/seat/models"
 	"testing"
 )
@@ -39,7 +40,7 @@ func TestGetMaxMinRange(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		min, max := GetMaxMinRange(tc.Current, tc.Length, tc.Distance)
+		min, max := utils.GetMaxMinRange(tc.Current, tc.Length, tc.Distance)
 		t.Logf("Test data: %v", tc)
 		assert.Equal(t, min, tc.Min)
 		assert.Equal(t, max, tc.Max)
@@ -83,7 +84,7 @@ func TestCalculateSeatDistance(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		dist := CalculateSeatDistance(tc.Seat, tc.Row, tc.Col)
+		dist := utils.CalculateSeatDistance(tc.Seat, tc.Row, tc.Col)
 		t.Logf("Test data: %v", tc)
 		assert.Equal(t, dist, tc.Distance)
 	}
@@ -129,11 +130,67 @@ func TestGetItemsInRange(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		items := GetItemsInRange(tc.Min, tc.Max, tc.Ignore)
+		items := utils.GetItemsInRange(tc.Min, tc.Max, tc.Ignore)
 		t.Logf("Test data: %v", tc)
 		t.Logf("Result: %v", items)
 		assert.True(t, reflect.DeepEqual(items, tc.Items))
 	}
 }
 
+func TestGetAllSeatInRange(t *testing.T) {
+	tcs := []struct {
+		Seat            *seat_models.Seat
+		Row             int64
+		Col             int64
+		Distance        int64
+		MapSeatsInRange map[int64][]int64
+	}{
+		{
+			Seat: &seat_models.Seat{
+				Col: 2,
+				Row: 2,
+			},
+			Row:      4,
+			Col:      4,
+			Distance: 2,
+			MapSeatsInRange: map[int64][]int64{
+				0: {2},
+				1: {1, 2, 3},
+				2: {0, 1, 3},
+				3: {1, 2, 3},
+			},
+		},
+		{
+			Seat: &seat_models.Seat{
+				Col: 2,
+				Row: 2,
+			},
+			Row:      3,
+			Col:      3,
+			Distance: 2,
+			MapSeatsInRange: map[int64][]int64{
+				0: {2},
+				1: {1, 2},
+				2: {0, 1},
+			},
+		},
+		{
+			Seat: &seat_models.Seat{
+				Col: 5,
+				Row: 5,
+			},
+			Row:      3,
+			Col:      3,
+			Distance: 2,
+			MapSeatsInRange: nil,
+		},
+	}
 
+	for _, tc := range tcs {
+		items := utils.GetAllSeatInRange(tc.Seat, tc.Row, tc.Col, tc.Distance)
+		t.Logf("Test data: %v", tc)
+		t.Logf("Expected: %#v", tc.MapSeatsInRange)
+		t.Logf("Result: %#v", items)
+		assert.True(t, reflect.DeepEqual(items, tc.MapSeatsInRange))
+	}
+}
